@@ -1,0 +1,63 @@
+service: MV-${env:REALM}-Serverless-ECS-Metrics
+
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${env:ENV}
+  memorySize: 128
+  timeout: 10
+  versionFunctions: false
+  region: ${env:AWS_REGION}
+  variableSyntax: "\\${(?!AWS::)((?:self|env):[ :a-zA-Z0-9._,\\-\\/\\(\\)]+?)}"
+  stackTags:
+    FRAMEWORK: serverless
+    Env: ${env:ENV}
+    Realm: ${env:REALM}
+  environment:
+    ENV: ${env:ENV}
+    REALM: ${env:REALM}
+    LOGLEVEL: ${env:LOGLEVEL}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - cloudwatch:Put*
+        - cloudwatch:Get*
+        - ecs:List*
+      Resource:
+        - "*"
+
+package:
+  artifact: package/package.zip
+
+plugins:
+  - serverless-log-forwarding
+  - serverless-plugin-aws-alerts
+
+custom:
+  logForwarding:
+    destinationARN: {"Fn::ImportValue": "${env:SUMOLOGIC_LAMBDA_ARN_EXPORT_NAME}"}
+  alerts:
+    dashboards: true
+    topics:
+      ok: ${env:OPS_GENIE_SNS_ARN}
+      alarm: ${env:OPS_GENIE_SNS_ARN}
+      insufficientData: ${env:OPS_GENIE_SNS_ARN}
+    definitions:
+      functionErrors:
+        threshold: 10
+        period: 900
+      functionDuration:
+        threshold: 60000
+        statistic: 'p95'
+        period: 900
+    alarms:
+      - functionErrors
+      - functionThrottles
+      - functionInvocations
+      - functionDuration
+
+functions:
+  handler:
+    handler: serverless_ecs_metrics.handler
+    events:
+      - schedule: rate(1 minute)
