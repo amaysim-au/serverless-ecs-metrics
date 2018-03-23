@@ -12,13 +12,13 @@ aws_lambda_logging.setup(level=os.environ.get('LOGLEVEL', 'INFO'), env=os.enviro
 logging.info(json.dumps({'message': 'initialising'}))
 aws_lambda_logging.setup(level=os.environ.get('LOGLEVEL', 'INFO'), env=os.environ.get('ENV'))
 
-ecs = boto3.client('ecs')
-cloudwatch = boto3.client('cloudwatch')
 MetricData = []
 
 def handler(event, context):
     """Handler for serverless-ecs-metrics"""
     aws_lambda_logging.setup(level=os.environ.get('LOGLEVEL', 'INFO'), env=os.environ.get('ENV'))
+    ecs = boto3.client('ecs')
+    cloudwatch = boto3.client('cloudwatch')
 
     clusters = [x.split('/')[-1] for x in ecs.list_clusters()['clusterArns']]
 
