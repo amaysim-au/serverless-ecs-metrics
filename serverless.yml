@@ -1,4 +1,4 @@
-service: MV-${env:REALM}-Serverless-ECS-Metrics
+service: MV-${env:REALM}-ECS-Metrics
 
 provider:
   name: aws
