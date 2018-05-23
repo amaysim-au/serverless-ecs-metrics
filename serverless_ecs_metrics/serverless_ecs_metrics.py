@@ -57,7 +57,7 @@ def handler(event, context):
         except:
             logging.exception(json.dumps({"message": "getting cpu", "response": response}))
 
-        if cpu and mem:
+        if cpu != None and mem != None:
             combined = max([cpu, mem])
 
             MetricData.append({
@@ -75,4 +75,3 @@ def handler(event, context):
     )
 
     return
-
